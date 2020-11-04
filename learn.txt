@@ -1,0 +1,73 @@
+mongod is server
+mongo is it.
+
+for change db
+mongod --dbpath "/data/db-where-it-is"
+
+show dbs
+
+use <name>
+
+db.<name of collection>
+
+mongdb server --> storage engine (wild tiger) ---> data
+
+storage engine : it load some of data to memory and some data to hdd
+it is a lot faster
+
+ObjectId is special type by mongdb
+
+BSON : binary json. efficient storage.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
