@@ -19,30 +19,39 @@ ObjectId is special type by mongdb
 
 BSON : binary json. efficient storage.
 
+CRUD operations have 3 args filter, data, options.
 
+updateOne({criteria}, {$set : {market : "sth"}})
 
+insertMay([take arr])
 
+update() with replace document.
 
+find() bring back cursor object (not 20000000 milion doc)
+toArray() will remove cursor object.
 
+Projection : filter response data on mongo.
+projections seat on second argument.
+passengers.find({}, { name : 1, _id: 0})
 
+it prevent from bandwith consumption.
 
+Embeded document : value of field can be doc, nested document
+we can have up to 100 level nesting
+the overall doc size must be below 16mb.
 
+Array : can have arrays of embeded document,
 
+Dbs and Collections are created lazily.
 
+filter restrice amount of docs , projections restrice fields per doc
 
+---------------------------
 
+section 3 :
 
-
-
-
-
-
-
-
-
-
-
-
+db.dropDatabase()
+db.someCollection.drop()
 
 
 
