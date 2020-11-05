@@ -54,13 +54,178 @@ db.dropDatabase()
 db.someCollection.drop()
 
 
+schema and modeling :
+
+Date : new Date() new Timestamp()
+
+show statics about this mongo db : db.stats()
+
+how structure data?
+which data we need? user info , products, info, orders. ...
+where do i need my data? welcome page , products , list page ...
+which data or info do i want to display?
+how often do i fetch my data?
+how often do i change data?
+
+
+relations : 
+nested doc or 
+References(when we want remove duplication) save id of another doc in field
+
+one - one , one - many , many - many 
+all have embeded and References like style.
+
+
+-
+Joining with $lookup operator
+it use aggreage method   
+use 2 fetch 2 related document merge in one in one step
+
+db.books.aggregate([{
+  $lookup: {
+    from:"which other collection you want relate document",
+    localField: "in collection you are on where can find References to other",
+    foreignField: "from foreign field like _id",
+    as : "alias for name"
+  }
+}])
+
+-
+validation :  
+
+validationLevel, validationAction
+strict : all insert and updates
+moderate : all insert check but updates check for doc that valid before
+
+
+create Collection explicitly :
+db.createCollection(name, /*configue*/ {validator: $jsonSchema: { 
+  besonTpye : "object" , 
+  required: [name of fields required],
+  properties : {
+    title : {
+      bsonType: "string", ...
+    },
+    content: {}, ...
+  }
+}}})
+
+
+after validation created as administrator :
+db.runCommand({collModd: "collection-modifier ex posts", ...validator, validation : "error or warn"})
+
+---------------------------------------
+
+Section 4 :
+
+mongo db as server or service.
+mongod --port , --help
+logpath
+dbpath
+create folder db and logs in there
+as server: 
+mongod --dbpath /path/here/ --logpath /path/to/log
+
+--fork
+start as child process as service in background 
+mongod --fork --logpath /path/to/log  
+
+db.shotdouwnServer();
+
+
+with config file :
+/etc/mongod.conf
+mongod -f /etc/mongod.conf
 
 
 
+for shell:
+mongo --help --port --host -u -p
+or in shell type help
+or db.help or db.testCollection.help()
 
 
+-------------------------------------------------
+
+Section 6 : creating operations
+
+shell
+mongoimport -d cars -c carlist --drop --josnArray
+
+db.collectinoeddd.insertOne({},{}); 
+insertMany([{}, {}], { 
+  ordered: false or true , 
+  
+})
+
+ordered insert : every element processed standalone.
 
 
+-
+writeConcern :
+is options on insert
+mongo write info to memory , disk 
+wtimeout : "wich time frame you give to server to report a success insert"
+w : 1 , on how many instances you want that write acknowleged.
+j: undefined true
+journal is on storage engine and works like TODO and back up TODO list
+        like when server reset and other bad things happen. 
+
+db.x.insertOne({},writeConcern : { w : 1 , j: true , wtimeout : 200 })
+
+-
+
+Atomicity :
+for any write operation
+means each transaction succeed as whole or error for each specific document 
+
+-
+import data :
+nav to file json.
+mongoimport -f /path -d databaseName -c collectionName --jsonArray(because there are multiple) --drop(if 
+data exist it will drop and re-added otherwise append)
+
+-------------------------------------------------------
+
+Section 7 : Read operations
+db.x.find(filter with operator for rangeFilter, projection)
+
+Query selector and Projection Operators 
+aggregation with pipleline stages(tunnel) and pipleline operators(shape)
+
+how operators impact our data??
+query operator use to locate data  $eq or $gt ...
+Projection operator use to modify presentation  $
+update operators use to modify and add $inc
+
+query selectors :
+comparison operators like $eq $nin $lt $in: [take arr of ]
+logical operators like $and $not $nor $or
+element operators
+evaluation operators
+array operators
+comments operators
+geospatial operators
+
+projection operators :
+$
+$elemMatch
+$meta(use for indexing)
+$slice
+
+
+-
+find() give cursor object but findOne()  not.
+
+db.x.find({name : "sth"}) or ({runtime : {$gt: 60 or $ne: 60}}) search for equality
+
+
+quey for embeded doc in doc :
+comparison
+db.x.find({"path.to.rating.example" : {$gt: 7}})
+
+logical
+db.x.find({$or:[{"rating.average" : {$lt: 5}},{"rating.average" : {$gt: 9}}]});
 
 
 
