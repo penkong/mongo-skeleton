@@ -201,9 +201,9 @@ update operators use to modify and add $inc
 query selectors :
 comparison operators like $eq $nin $lt $in: [take arr of ]
 logical operators like $and $not $nor $or
-element operators
-evaluation operators
-array operators
+element operators like $exists $type
+evaluation operators like $jsonSchema $expr $mod $regex $text 
+array operators like $all $elemMatch $size
 comments operators
 geospatial operators
 
@@ -221,11 +221,283 @@ db.x.find({name : "sth"}) or ({runtime : {$gt: 60 or $ne: 60}}) search for equal
 
 
 quey for embeded doc in doc :
-comparison
+
+comparison:
 db.x.find({"path.to.rating.example" : {$gt: 7}})
 
-logical
+logical:
 db.x.find({$or:[{"rating.average" : {$lt: 5}},{"rating.average" : {$gt: 9}}]});
+below is equal to use $and with 2 statement.
+db.x.find({"rating.average" : {$gt:9}, genres: "drama"}) //concise way.
+not is different
+db.x.find({runtime : {$not: {$eq:60}}})
+
+element :
+check existance of field
+db.x.find({age : {$exists : true, $gt : 30 , $ne: null}})
+
+db.x.find({phone : {$type: "number or double" or ["double", "string"]}})
+
+
+evaluation :
+$jsonSchema use to query values that have certain schema
+use for search text - not efficient
+db.x.find({ summary : {$regex : /musical/}})
+
+$expr is useful when want to compare two fields inside one doc and then find all document with this certain result
+db.x.find({$expr : {$gt: ["$volume(make it field with $)" , "$target"]}})
+db.x.find({$expr : {$gt: [{
+  $cond : { if : {$gte: ["$volume", 190]}, then : {$subtract : ["$volume" , 10]}, else : "$volume"}}, "value compare to $target"]}})
+
+arrays :
+db.x.find({"hobbies.title": "sports"})
+db.x.find({hobbies : {$size: 3 // you can only for exact match here}})
+when we dont care about order
+db.x.find({genre: ${all :['action', 'thriller']}})
+db.x.find({"hobbies.title": "sports"})
+$elemMatch exec conditions on specific doc that iterate over.
+db.x.find({"hobbies.title": {$elemMatch : {title : "sports" , frequency :{$gte: 3}}}})
+
+
+-
+cursor : 
+find() because it bring back milions of items 
+cursor is pointer. and give me next batch1 , batch2 .
+
+applying cursor 
+const dataCursor = db.x.find()
+dataCursor.next() .forEach(doc => {printjson(doc)})
+dataCursor.hasNext()
+
+sorting cursor result 
+db.x.find().sort({"rating.average" : 1 or -1 , runtime : 1})
+
+pagination 
+db.x.find().sort().skip(10).limit(10)
+
+
+PROJECTION : shape data back
+db.x.find({}, {name: 1, genres: 1, runtime: 1 , rating : 1}).sort().skip()
+in array
+db.x.find({genres: 'drama' }, {"genres.$" : 1})
+db.x.find({genres: 'drama' }, {"genres" : {$elemMatch : {$eq: "sth else"}}})
+$slice
+db.x.find({genres: 'drama' }, {"genres" : {$slice : 2 or [1skip, 2amount we want]}, name: 1})
+
+
+---------------------------------------------------------
+
+Section 8 : Update documents
+
+db.x.updateOne({filter}, {how update})
+Update Operators : $currentData , $inc ...
+db.x.updateOne({}, {$set: {}})
+db.x.updateOne({}, {$inc: {age:2 or -2}, $set: {}})
+min change value if new value is smaller than existing value
+db.x.updateOne({}, {$min / max: {age:35}})
+multiple field value in number
+db.x.updateOne({}, {$mul: {age:1.1}})
+
+get rid of field drop
+db.x.updateOne({}, {$unset: {phone: ""}})
+
+rename field
+db.x.updateOne({}, {$rename: {age : "new Field name"}})
+
+we dont know exist or not if not create else update
+db.x.updateOne({name: "bagher"}, {$set: {age: , dfsd: ,}}, {upsert: true //combination of update and insert})
+
+work with arrays :
+db.x.updateOne({with $elemMatch we select doc in array}, 
+  {$set: {"hobbies.$(it refer to element matched).[field of doc in array like frequency]": {....}}}
+)
+
+update all arr element :
+"hobbies.$" it only works for first match
+but we need criteria work for all elem in array
+db.x.updateOne({}, {$inc: {"hobbies.$[].frequency": -1}})
+
+find and update specific field
+array filters works with $[el]
+with el specify condition and with arrayFilters implement how must set it
+db.x.updateMany({}, {$set: {"hobbies.$[el].goodFrequence" : true}}, {arrayFilters: [{each are filter}, {"el.frequency": {$gt: 2}}] })
+
+adding ele to array :
+db.x.updateOne({}, {$push : {hobbies : {title : "sports" or $each: [{}, {}], $sort: {frequency: -1},// $slice: 1}})
+
+remove ele to array
+db.x.updateOne({}, {$pull: {hobbies: {title: "sth" or }}})
+remove last ele of array
+db.x.updateOne({}, {$pop: {hobbies: 1 or -1})
+
+for add one item to set %%%%%%%%%%%% add unique value
+db.x.updateOne({}, {$addToSet: {hobbies: {...}})
+
+--------------------------------------------------------
+
+Section 9 : Delete docs
+
+db.x.deleteOne({filter}, {set right conecern})
+
+Delete all
+db.x.deleteMany({})
+db.x.drop()
+db.dropDatabase()
+
+
+
+
+--------------------------------------------------------
+
+Section 10 : indexing
+
+Retrieving Data efficient
+
+index scan
+cost is when you insert
+
+give us statics
+db.x.eplain().queryMethod()
+
+db.x.eplain("executionStats").queryMethod()
+
+
+to add index
+db.x.createIndex({name of field you want create index : list of value in asc or des, name: 1 })
+
+to remove index
+db.x.dropIndex({name : 1})
+
+index restriction
+dont use for major data read.
+
+create compound index
+order is important and we can use only age but not gender as index search
+bun when querying order is not important
+db.x.createIndex({age: 1, gender: 1})
+
+use index for sorting
+db.x.find(age: 35).sort({gender: 1})
+
+mongo has threshhold of 32mb for memory for sorting 
+there for for big data to sort need indexing
+
+default index
+db.x.getIndexes()
+
+Configure Indexes :
+db.x.createIndex({email: 1}, {unique: true})
+
+Partial Filters : for regulary query
+db.x.createIndex({age : 1}, {partialFilterExpression: { age} //can add to compound index also})
+
+Partial index(use for subset of info age and gender male) are smaller than compound index(use for bigger like age and gender)
+
+
+applying Partial index :
+mongo db treat nonexisting values still as value(null)
+
+db.x.createIndex({email: 1}, {unique: true}) // it take error on second doc with email null 
+
+db.x.createIndex({email: 1}, {unique: true, partialFilterExpression: {email : {$exists: true}}})
+
+
+TTL index (time to live) :
+can use on single field indexes not compound one
+and only work with date objects
+db.x.createIndex({createdAt:1}, {expireAfterSeconds: 10})
+
+--
+
+Query Diagnosis and Query Planning 
+
+explain('queryPlanner') : show summary for executed query + winning plan
+
+explain('executionStats') : show Detailed summary for exe query + winning plan + Possibly rejected Plans
+
+explain('allPlansExecution') : show Detailed summary for exec query + winning plan + winning plan decision process
+
+
+efficient query : check milisecond , IXSCAN , COLLSCAN , num of keys , num of docs , num of returned.
+
+
+Covered Query :
+when in plan explain totalDocsExamind is 0 if you return index and projection with index field
+
+how rejects plan :
+rejected plan when search with compound index it normally become winning plan vs single index become reject plan
+db.x.findOne({name, age})// index {age:1,name:1} vs db.x.find({name}) // index {name:1}
+how mongdb findout best index to use az winning??? 
+3 approach
+1- race for some doc and check. and it win
+2- mongo cache winner plan. (remove after 1000 insert or index rebuilt or deleted or restart mongodb server)
+3- for future use this.
+4- if new query race again
+
+--
+
+Multi key Indexes :
+like index array (in explain isMultiKey : true) they stored differently
+db.x.createIndex({hobbies: 1})
+
+
+Multi Text Index :
+db.x.createIndex({description: "text"});
+it remove all stop words and make keywords in array.
+
+db.x.find({$text: {$search : "word you want search"}}) //treat as not connected words
+db.x.find({$text: {$search: "\"red book"\"}}) // treat as whole 
+
+text index and sorting
+we can find how it store result with score projection 
+db.x.find({$text: {$search : "word you"}}, {score : {$meta : "textScroe"}})
+
+
+create Combined Index :
+merge 2 field index text
+db.x.createIndex({title: "text", description: "text"})
+
+text index to excluede :
+db.x.find({$text: {$search: "awsome -(minus)sht"}})
+
+define default language : 
+db.x.createIndex({title: "text", description: "text" }, {default_language: "english" , weights: { title: 1, description: 10v}})
+
+
+create index foreground and background
+mongo /path/file
+db.x.createIndex({age: 1}, {background: true})
+
+--------------------------------------------------------------
+
+Section 11 : workinig with geospatial data
+
+adding GEOJson data (lat(hori), lng(vertical))
+db.x.insertOne({lactions : {type: "Point", coordinates: [lng, lat]}})
+
+query GEO : near place
+db.x.find({locations : {$near: {$geometry: {type: "Point" , coordinates : [current coordinates]}, $maxDistance : 30m , $minDistance: 10m }}})
+
+for success query we need geospatial indexed
+db.x.createIndex({locations: "2dsphere"})
+now last query will work.
+
+also we must restrict near like $maxDistance : 30m , $minDistance: 10m
+
+
+adding additional locations :
+
+which points is inside area?
+
+get corners lat and lng ,
+
+find in a certain area
+db.x.find({ loaction: {$geoWithin: {$geometry: {type: "Polygon", coordinates: [[p1,p2,p3,p4,p1]]}}}})
+
+
+find in a specific area
+db.x.find({area: {$geoIntersects: {$geometry: {type: "Point", coordinates: [current]}}}})
+
 
 
 
