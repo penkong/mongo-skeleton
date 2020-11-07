@@ -639,15 +639,67 @@ find max score.
 
 
 
-Understanding $bucket :~
+Understanding $bucket :
+{$bucket(export data in bucket and can calucluate certains summary statistics) : {
+  groupBy : "$dob.age", 
+  boundaries : [0, 18 , 30, 50, 70] //bucket categories, 
+  output : {
+    numbePersons: {$sum: 1}
+    averageAge : {$avg: "$dob.age"}
+    names: {$push: "$name.frist"}
+  }
+}}
+
+
+{$bucketAuto: { groupBy : "$dob.age", bucket : 5 , ...output}}
 
 
 
+Addditional Stages :
+find oldest birthData
+{$project: {_id: 0, name: 1, birthData: {$toDate: "$dob.date"}}},
+{$sort: {birthData : 1}},
+{$skip: 10},
+{$limit: 10}
 
 
 
+pipleline result in new collection : 
+{$out: "transformedPersons"}
 
 
+working with $geoNear:
+geo Near has to be first element in pipleline
+db.x.createIndex({location: "2dsphere"})
+{$geoNear:  {
+  near: { type: "Point", coordinates: [x,y]},
+  maxDistance: 10000,
+  num: 10,
+  query : { age : ""},
+  distanceField: "distance"
+}}
+
+
+------------------------------------------
+
+Section 13 : working with numeric data
+
+int32 , long(int64) , doubles(not gauranted) (64bit) , high precision double(128bit) 34 decimal digits
+
+default js is double (64float value)
+
+{age: NumberInt("29")}
+{age: NumberLong("29")}
+always import with string mode 
+also udpate NumberLong with NumberLong
+
+scientific
+high precision double
+NumberDecimal("543534.645645634534534")
+
+---------------------------------------------
+
+Section 14 : mongodb and security .
 
 
 
