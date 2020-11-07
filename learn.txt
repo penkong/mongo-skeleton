@@ -499,6 +499,158 @@ find in a specific area
 db.x.find({area: {$geoIntersects: {$geometry: {type: "Point", coordinates: [current]}}}})
 
 
+find in a redius area 
+db.x.find({location: {$geoWithin: {$centerSphere: [[your coordinates of circle], 1km/6378.1 ]}}})
+
+
+
+---------------------------------------------------------
+
+SECTION 12 : Aggregation framework
+
+Retrieving data efficient in a structured way
+
+aggregation framework is alternative to find()
+
+it is all about build pipleline of steps run over dat   a
+
+check aggregation pipleline statges on doc
+
+use 
+db.x.aggregate([{first step receive data }, {second step do works}])
+db.x.aggregate([
+  {$match(filtering step): {gender: "female"}},
+  {$group(allow us group data by cetain field): {
+    _id(by which field we want group): {state: "$(refer to feild)location.state"},
+    totalPerson(key we want): {(a doc for describe kind of aggr we want)$sum : 1} 
+  }}
+])
+
+with sort :
+add new pipleline statge
+each pipleline stage has output data to next stage.
+db.x.aggregate([
+  {$match: {gender: "female"}},
+  {$group: {
+    _id: {state: "$location.state"},
+    totalPerson: {$sum : 1} 
+  }},
+  {$sort: { totalPerson: -1 }}
+])
+
+
+$project :
+allow us to transform every doc(projection)
+
+db.x.aggregate([
+  {$project : { 
+    _id: 0, 
+    gender: 1, 
+    fullName: {$concat: ["$name.first", " "  , "$name.last"]} or 
+    fullName: {
+      $concat: [
+        {$toUpper: {$substrCP : ["$name.first", 0(start), 1(how many char include in substr)]}}, 
+        {$substrCP : ["$name.first", 1, {$subtract : [{ $strLenCP : "$name.first"}, 1]}]},
+        " "  , 
+        {$toUpper:"$name.last"}]}
+  }}
+])
+
+
+turning lcation to geoJson :
+db.x.aggregate([
+  {$project: {
+    _id: 0, 
+    name: 1, 
+    email: 1, 
+    birthData:  $convert: { input: "$dob.data", to: "date"},
+    age: "$dob.age",
+    location: {type: "Point", coordinates: [{
+        $convert: { input: "$location.coordinates.long", to: "double", onError: 0, onNull: 0},
+        $convert: { input: "$location.coordinates.latitude", to: "double", onError: 0, onNull: 0}, 
+      ]}
+    }
+  },
+  {$project : { 
+    loaction: 1,
+    email: 1,
+    birthData: 1,
+    age: 1,
+    fullName: {$concat: ["$name.first", " "  , "$name.last"]} or 
+    fullName: {
+      $concat: [
+        {$toUpper: {$substrCP : ["$name.first", 0(start), 1(how many char include in substr)]}}, 
+        {$substrCP : ["$name.first", 1, {$subtract : [{ $strLenCP : "$name.first"}, 1]}]},
+        " "  , 
+        {$toUpper:"$name.last"}]}
+  }}
+])
+
+
+using shorutcuts to transformation :
+in aggregate pipline operators
+ $convert: { input: "$dob.data", to: "date"}, become $toDate: "$dob.data"
+
+
+
+Understanding $isoWeekYear: 
+it is another stage
+{$group : {_id : { birthYear: {$isoWeekYear : "$birthData"}, numPersons: {$sum: 1}}}}
+
+
+
+$group vs $project ::
+$group => ndoc to 1
+$project => 1doc to 1
+
+
+Array helper stages :
+push info to array but it can be array in array 
+{$group: {_id : { age : "$age"}, allHobbies : { $push: "$hobbies"}}}
+
+for push values of many array to one 
+{$unwind(flatten array ,stage use when you have an array and want pull out info): "$(name of arry)hobbies"}
+$group != $unwind
+
+to remove duplication use $addToSet rather than $push
+
+
+Projections with array :
+{$project : {_id: 0, examScore: {$slice : [first val is arr to slice $examScore, amount of el we want or, 2(start position), 1(give me one)]}}}
+
+
+get length of array :
+{$project : {_id: 0, numScore: {$size : arr name with $}}}
+
+
+$filter operator :
+{$project : {_id: 0, numScore: {$filter: {input : array we want filter, as: temp name for use(sc), 
+  cond: {$gt: ["$$sc.score", 60]} 
+}}}}
+
+
+multiple operator on array :
+find max score.
+{$unwind(work on array): "$exmaScores"},
+{$project: {_id: 1, name:1, age:1 , score: "$examScore.score"}}
+{$sort: {score: -1}}
+{$group: {_id : "$_id", name: {$first(give first field of name obj): "$name"} maxScore: {$max :"$score"}}}
+{$sort: {maxScore: -1}}
+
+
+
+Understanding $bucket :~
+
+
+
+
+
+
+
+
+
+
+
 
 
 
