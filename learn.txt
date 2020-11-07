@@ -701,6 +701,172 @@ NumberDecimal("543534.645645634534534")
 
 Section 14 : mongodb and security .
 
+auth and authorize for db .
+
+transport encryption.
+
+encryption at rest.
+
+auditing = who did what which action occured
+
+Server and Network config setup
+
+Backup and software update.
+
+
+
+Authentication : identify valid user
+Authorization : what those user actually can do in db
+
+Role Based Access Control 
+user here is data analyst or application
+
+in mongo users have some assigned roles 
+these roles are essentially groups of privileges.
+privileges = actions + resource
+
+
+create and edit users :
+createUser(), updateUser()
+
+
+
+mongod --auth , after this that does not show dbs like past
+mongo -u maz -p password or db.auth('','')
+use admin 
+
+db.createUser({ user: "maz" , pwd: "password", roles: ["userAdminAnyDatabase"]})
+db.auth('maz', 'pass')
+
+roles : 
+dbuser: read , readWrite 
+dbAdmin : dbAdmin , userAdmin , dbOwner
+allDbRolles : readAnyDatabase , readWriteAnyDatabase, userAdminAnyDatabase, dbAdminAnyDatabase
+clusterAdmin : clusterManager, clusterMonitor , hostManager , clusterAdmin
+backup/restore
+superUser: dbOwner , userAdmin , userAdminAnyDatabase, root
+
+
+assigning roles to users and dbs :
+login as admin to admin db
+mongo -u max -p max  --authenticationDatabase admin
+
+then 
+db.createUser({user: 'appdev', pwd: 'dev', roles: ['readWrite']})
+
+db.auth('appdev', 'dev') => bring back 1
+
+
+now one user how access 2 db:
+shopDB, blogDB
+db.updateUser("appdev", {roles: ["replace prior registred db readWrite", {role: "readWrite", db: "blog"}]})
+
+db.getUser("appDev")
+
+
+SSL,TLS : Transport encryption
+anti spoofing
+check doumentation
+do ssl stuff
+mongod --sslMode requireSSL --sslPEMKEyFile /path
+
+mongo --ssl --sslCAFile /pmfile  --host localhost
+
+
+Encryption at Rest :
+enterprise
+hashpassword
+
+
+
+
+-----------------------------------------------------
+
+Section 15 : Performance , Fault tolerancy and deployment.
+
+influence Performance,
+capped collection,
+replica sets,
+sharding,
+mongodb deploy,
+
+
+
+
+capped Collections :
+explicity collection you can limit amount of data stored in.
+use for caching and log
+
+db.createCollection('name you want', {capped: true, size : 10000bytes , max(number of doc at most): 3})
+hint : db.x.find().sort({$natural : -1 }) // give back base on creation
+
+
+Replica Set ???
+create and manage as a db or sys admin
+
+client -> mongodbserver -> primary node
+you can add more node so called secondary node
+and all together called replica set 
+if primary node go down we go to replica node and do election - fault tolerancy
+write req always go to primary but we can do setting for read data in mongo server to go to replica
+
+
+Sharding (Horizantal Scaling ---- vs ||)
+computers who run mongo db work together and split up available data so 
+data distributd across shards (computers run mongodb server)
+
+when we have shards we have new middle man named mongos   client --> mongos(Router ) ---> shards
+therefore to let Router handle that you need to inform router where are data in specific shard
+and we add something called shard-key
+
+if have not shard-key mongos broadcast query .
+
+
+
+--------------------------------------------------------------
+
+Section 16 : transactions
+
+you need replica set for transactions to work
+search google. for top sentence
+
+for transaction works we need session.
+
+const session  = db.getMongo().startSession();
+
+session.startTransaction()
+const usersCol = session.getDatabase("blog").usersCollection
+const postsCol = session.getDatabase("blog").posts
+usersCol.find() or deleteOne() ---> save as todo
+postsCol.find() or ....
+
+session.commitTransaction() or abortTransaction()
+
+
+-------------------------------------------------------------
+
+Section 17 : from shell to Drivers
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
