@@ -852,6 +852,11 @@ Section 17 : from shell to Drivers
 
 
 
+-------------------------------------------------------------
+
+Section 18 : STITCH beyond Data storage
+
+serverless platform for building application
 
 
 
