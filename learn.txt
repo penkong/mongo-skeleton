@@ -7,10 +7,10 @@ mongod --dbpath "/data/db-where-it-is"
 show dbs
 
 use <name>
-
+ 
 db.<name of collection>
 
-mongdb server --> storage engine (wild tiger) ---> data
+mongdb server --> storage engine (wired tiger) ---> data
 
 storage engine : it load some of data to memory and some data to hdd
 it is a lot faster
@@ -84,7 +84,7 @@ use 2 fetch 2 related document merge in one in one step
 db.books.aggregate([{
   $lookup: {
     from:"which other collection you want relate document",
-    localField: "in collection you are on where can find References to other",
+    localField: "in collection you are, where can find References to other collection ",
     foreignField: "from foreign field like _id",
     as : "alias for name"
   }
@@ -151,6 +151,7 @@ Section 6 : creating operations
 
 shell
 mongoimport -d cars -c carlist --drop --josnArray
+mongoimport --db dbName --collection collectionName --file fileName.json --jsonArray
 
 db.collectinoeddd.insertOne({},{}); 
 insertMany([{}, {}], { 
@@ -199,11 +200,12 @@ Projection operator use to modify presentation  $
 update operators use to modify and add $inc
 
 query selectors :
-comparison operators like $eq $nin $lt $in: [take arr of ]
-logical operators like $and $not $nor $or
-element operators like $exists $type
-evaluation operators like $jsonSchema $expr $mod $regex $text 
-array operators like $all $elemMatch $size
+
+comparison operators  like $eq $nin $lt $in: [take arr of ]
+logical operators     like $and $not $nor $or
+element operators     like $exists $type
+evaluation operators  like $jsonSchema $expr $mod $regex $text 
+array operators       like $all $elemMatch $size
 comments operators
 geospatial operators
 
@@ -244,10 +246,13 @@ $jsonSchema use to query values that have certain schema
 use for search text - not efficient
 db.x.find({ summary : {$regex : /musical/}})
 
-$expr is useful when want to compare two fields inside one doc and then find all document with this certain result
+$expr is useful when want to compare two fields inside one doc and then find all 
+      document with this certain result
 db.x.find({$expr : {$gt: ["$volume(make it field with $)" , "$target"]}})
 db.x.find({$expr : {$gt: [{
-  $cond : { if : {$gte: ["$volume", 190]}, then : {$subtract : ["$volume" , 10]}, else : "$volume"}}, "value compare to $target"]}})
+  $cond : { if : {$gte: ["$volume", 190]}, then : {$subtract : ["$volume" , 10]}, else : "$volume"}}, 
+  "value compare to $target"]}
+})
 
 arrays :
 db.x.find({"hobbies.title": "sports"})
@@ -266,7 +271,7 @@ cursor is pointer. and give me next batch1 , batch2 .
 
 applying cursor 
 const dataCursor = db.x.find()
-dataCursor.next() .forEach(doc => {printjson(doc)})
+dataCursor.next().forEach(doc => {printjson(doc)})
 dataCursor.hasNext()
 
 sorting cursor result 
@@ -288,6 +293,7 @@ db.x.find({genres: 'drama' }, {"genres" : {$slice : 2 or [1skip, 2amount we want
 ---------------------------------------------------------
 
 Section 8 : Update documents
+filter , data , options 
 
 db.x.updateOne({filter}, {how update})
 Update Operators : $currentData , $inc ...
@@ -305,7 +311,11 @@ rename field
 db.x.updateOne({}, {$rename: {age : "new Field name"}})
 
 we dont know exist or not if not create else update
-db.x.updateOne({name: "bagher"}, {$set: {age: , dfsd: ,}}, {upsert: true //combination of update and insert})
+db.x.updateOne(
+  {name: "bagher"}, 
+  {$set: {age: , dfsd: ,}}, 
+  {upsert: true //combination of update and insert}
+)
 
 work with arrays :
 db.x.updateOne({with $elemMatch we select doc in array}, 
@@ -320,10 +330,16 @@ db.x.updateOne({}, {$inc: {"hobbies.$[].frequency": -1}})
 find and update specific field
 array filters works with $[el]
 with el specify condition and with arrayFilters implement how must set it
-db.x.updateMany({}, {$set: {"hobbies.$[el].goodFrequence" : true}}, {arrayFilters: [{each are filter}, {"el.frequency": {$gt: 2}}] })
+db.x.updateMany(
+  {}, 
+  {$set: {"hobbies.$[el].goodFrequence" : true}}, 
+  {arrayFilters: [{each are filter}, {"el.frequency": {$gt: 2}}] }
+)
 
 adding ele to array :
-db.x.updateOne({}, {$push : {hobbies : {title : "sports" or $each: [{}, {}], $sort: {frequency: -1},// $slice: 1}})
+db.x.updateOne(
+  {}, 
+  {$push : {hobbies : {title : "sports" or $each: [{}, {}], $sort: {frequency: -1},// $slice: 1}})
 
 remove ele to array
 db.x.updateOne({}, {$pull: {hobbies: {title: "sth" or }}})
@@ -363,7 +379,9 @@ db.x.eplain("executionStats").queryMethod()
 
 
 to add index
-db.x.createIndex({name of field you want create index : list of value in asc or des, name: 1 })
+db.x.createIndex({
+  name of field you want create index : list of value in asc or des, name: 1 
+})
 
 to remove index
 db.x.dropIndex({name : 1})
@@ -389,9 +407,13 @@ Configure Indexes :
 db.x.createIndex({email: 1}, {unique: true})
 
 Partial Filters : for regulary query
-db.x.createIndex({age : 1}, {partialFilterExpression: { age} //can add to compound index also})
+db.x.createIndex(
+  {age : 1}, 
+  {partialFilterExpression: { age} //can add to compound index also}
+)
 
-Partial index(use for subset of info age and gender male) are smaller than compound index(use for bigger like age and gender)
+Partial index(use for subset of info age and gender male)
+are smaller than compound index(use for bigger like age and gender)
 
 
 applying Partial index :
@@ -411,14 +433,18 @@ db.x.createIndex({createdAt:1}, {expireAfterSeconds: 10})
 
 Query Diagnosis and Query Planning 
 
-explain('queryPlanner') : show summary for executed query + winning plan
+explain('queryPlanner') : 
+show summary for executed query + winning plan
 
-explain('executionStats') : show Detailed summary for exe query + winning plan + Possibly rejected Plans
+explain('executionStats') : 
+show Detailed summary for exe query + winning plan + Possibly rejected Plans
 
-explain('allPlansExecution') : show Detailed summary for exec query + winning plan + winning plan decision process
+explain('allPlansExecution') : 
+show Detailed summary for exec query + winning plan + winning plan decision process
 
 
-efficient query : check milisecond , IXSCAN , COLLSCAN , num of keys , num of docs , num of returned.
+efficient query : 
+check milisecond , IXSCAN , COLLSCAN , num of keys , num of docs , num of returned.
 
 
 Covered Query :
@@ -520,7 +546,7 @@ use
 db.x.aggregate([{first step receive data }, {second step do works}])
 db.x.aggregate([
   {$match(filtering step): {gender: "female"}},
-  {$group(allow us group data by cetain field): {
+  {$group(allow us group data by certain field): {
     _id(by which field we want group): {state: "$(refer to feild)location.state"},
     totalPerson(key we want): {(a doc for describe kind of aggr we want)$sum : 1} 
   }}
